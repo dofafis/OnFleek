@@ -1,3 +1,4 @@
+require('dotenv').config();
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -10,16 +11,15 @@ var cors = require("cors");
 //var usersRouter = require('./routes/users');
 var titulosRouter = require('./routes/titulos');
 var usuariosRouter = require('./routes/usuarios');
-
 var app = express();
 
 //Database Connection
 app.use(function(req, res, next){
         global.connection = mysql.createConnection({
-                host     : 'localhost',
-                user     : 'root',
+                host     : process.env.DB_HOST,
+                user     : process.env.DB_USER,
                 database : 'OnFleek',
-                password : 'onfleek'
+                password : process.env.DB_PASS
         });
         connection.connect();
         next();
@@ -62,4 +62,4 @@ app.use(function(err, req, res, next) {
 });
 
 module.exports = app;
-app.listen(4001);
+app.listen(3000);

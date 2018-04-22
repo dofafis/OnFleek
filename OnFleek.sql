@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario` (
   `idUsuario` INT NOT NULL AUTO_INCREMENT,
   `nomeUsuario` VARCHAR(90) NOT NULL,
   `emailUsuario` VARCHAR(100) NOT NULL,
-  `senhaUsuario` VARCHAR(50) NOT NULL,
+  `senhaUsuario` VARCHAR(150) NOT NULL,
   PRIMARY KEY (`idUsuario`))
 ENGINE = InnoDB;
 

@@ -14,12 +14,16 @@
     "morgan": "~1.9.0"
   },
   "devDependencies": {
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.4",
+    "dotenv": "^5.0.1",
     "jade": "^1.11.0",
+    "jsonwebtoken": "^8.2.1",
     "morgan": "^1.9.0",
     "mysql": "^2.15.0",
+    "nodenv": "^0.1.0",
     "pug": "^2.0.3"
   }
 }
