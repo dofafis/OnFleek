@@ -23,9 +23,12 @@ USE `OnFleek` ;
 CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario` (
   `idUsuario` INT NOT NULL AUTO_INCREMENT,
   `nomeUsuario` VARCHAR(90) NOT NULL,
+  `dataNascimentoUsuario` DATE NOT NULL,
   `emailUsuario` VARCHAR(100) NOT NULL,
   `senhaUsuario` VARCHAR(150) NOT NULL,
-  PRIMARY KEY (`idUsuario`))
+  `admUsuario` TINYINT(1) NOT NULL,
+  PRIMARY KEY (`idUsuario`),
+  CONSTRAINT Usuario_unique UNIQUE (emailUsuario))
 ENGINE = InnoDB;
 
 
@@ -34,9 +37,18 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `OnFleek`.`Titulo` (
   `idTitulo` INT NOT NULL AUTO_INCREMENT,
-  `nomeTitulo` VARCHAR(100) NOT NULL,
-  `categoriaTitulo` CHAR(30) NOT NULL,
-  `descricaoTitulo` VARCHAR(400) NOT NULL,
+  `nomePortuguesTitulo` VARCHAR(200) NOT NULL,
+  `nomeOriginalTitulo` VARCHAR(200) NOT NULL,
+  `sinopseTitulo` VARCHAR(700) NOT NULL,
+  `diretorTitulo` VARCHAR(200) NOT NULL,
+  `anoProducaoTitulo` INT NOT NULL,
+  `duracaoMinutosTitulo` INT NOT NULL,
+  `classificacaoTitulo` VARCHAR(150) NOT NULL,
+  `paisOrigemTitulo` VARCHAR(100) NOT NULL,
+  `generoTitulo` VARCHAR(100) NOT NULL,
+  `tipoTitulo` VARCHAR(30) NOT NULL,
+  `estreiaMundialTitulo` DATE NOT NULL,
+  `estreiaBrasilTitulo` DATE,
   PRIMARY KEY (`idTitulo`))
 ENGINE = InnoDB;
 
@@ -45,10 +57,11 @@ ENGINE = InnoDB;
 -- Table `OnFleek`.`Usuario_Comenta_Titulo`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Comenta_Titulo` (
+  `idComentario` INT NOT NULL AUTO_INCREMENT,
   `Usuario_idUsuario` INT NOT NULL,
   `Titulo_idTitulo` INT NOT NULL,
   `descricaoComentario` VARCHAR(500) NULL,
-  PRIMARY KEY (`Usuario_idUsuario`, `Titulo_idTitulo`),
+  PRIMARY KEY (`idComentario`),
   CONSTRAINT `fk_Usuario_has_Titulo_Usuario`
     FOREIGN KEY (`Usuario_idUsuario`)
     REFERENCES `OnFleek`.`Usuario` (`idUsuario`)

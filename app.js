@@ -8,9 +8,17 @@ var mysql = require('mysql');
 var bodyParser = require("body-parser");
 var indexRouter = require('./routes/index');
 var cors = require("cors");
+
+const fileUpload = require('express-fileupload');
+
+var multer = require('multer');
+var uploads = multer({ dest: 'uploads/' });
 //var usersRouter = require('./routes/users');
 var titulosRouter = require('./routes/titulos');
 var usuariosRouter = require('./routes/usuarios');
+var comentariosRouter = require('./routes/comentarios');
+var uploadsRouter = require('./routes/uploads');
+
 var app = express();
 
 //Database Connection
@@ -26,11 +34,35 @@ app.use(function(req, res, next){
 });
 //Database Connection
 
+//upload
+// default options
+app.use(fileUpload());
+ /*
+app.post('/uploads', function(req, res) {
+	console.log('cheguei aqui');
+  if (!req.files)
+    return res.status(400).send('No files were uploaded.');
+ 
+  // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
+  var sampleFile = req.files.sampleFile;
+ 	console.log(req.body.fileName);
+  // Use the mv() method to place the file somewhere on your server
+  sampleFile.mv('./uploads/filename.jpg', function(err) {
+    if (err)
+      return res.status(500).send(err);
+ 
+    res.send('File uploaded!');
+  });
+});*/
+//upload
+
 // view engine setup
 app.engine('pug', require('pug').__express);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
+app.use(express.static('public'));
+//app.use();
 //Middlewares
 app.use(logger('dev'));
 app.use(bodyParser.urlencoded({extended: true}));
@@ -39,11 +71,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 
 app.use('/', indexRouter);
 app.use('/titulos', titulosRouter);
 app.use('/usuarios', usuariosRouter);
+app.use('/comentarios', comentariosRouter);
+app.use('/uploads', uploadsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

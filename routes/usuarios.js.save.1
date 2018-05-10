@@ -1,0 +1,181 @@
+var express = require('express');
+var router = express.Router();
+
+var jwt = require('jsonwebtoken');
+var bcrypt = require('bcryptjs');
+var config = require('../config');
+var verificarToken = require('./verificarToken');
+
+/* GET Usuarios listing. */
+router.get('/todos', function(req, res, next) {
+	connection.query('SELECT idUsuario,nomeUsuario,emailUsuario from Usuario;', function (error, results, fields) {
+                if(error){
+                        res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
+                        //If there is error, we send the error in the error section with 500 status
+                } else {
+                        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+                        //If there is no error, all is good and response is 200OK.
+                }
+        });
+});
+
+//GET Usuario especifico
+router.get('/meu', verificarToken, function(req, res, next) {
+	connection.query('SELECT nomeUsuario,emailUsuario FROM Usuario WHERE idUsuario=?;', [req.idUsuario], 
+		function(error, results, fields){
+			if(error){
+				res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+			}else{
+				res.send(JSON.stringify({ "status": 500, "error": null, "response": results }));
+			}
+		}
+	);
+});
+//GET usuario especifico
+
+/* POST Usuarios */
+router.post('/cadastro',function(req, res, next) {
+	var jsondata = req.body;
+	console.log(jsondata.emailUsuario);
+	var values = [jsondata.nomeUsuario, jsondata.dataNascimentoUsuario, 
+		jsondata.emailUsuario, bcrypt.hashSync(jsondata.senhaUsuario), jsondata.admUsuario];
+
+	connection.query('INSERT INTO Usuario (nomeUsuario,dataNascimentoUsuario,emailUsuario,senhaUsuario,admUsuario) VALUES (?);', [values], 
+		function (error, results, fields) {
+			if(error){
+				res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
+			} else {
+				connection.query('SELECT idUsuario FROM Usuario where senhaUsuario=?;', values[3], function(error, results, fields){
+					if(error){
+						res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
+					}else{
+						console.log(results[0]);
+						var token = jwt.sign({id: results[0].idUsuario}, config.secret, {
+							expiresIn: 86400 //24 horas
+						});
+						res.status(200).send({auth: true, token: token});
+					}
+				});
+			}
+		});
+});
+
+router.post('/login', function(req, res, next){
+	var jsondata = req.body;
+	console.log(jsondata.emailUsuario);
+	var values = [jsondata.emailUsuario, jsondata.senhaUsuario];
+	
+	connection.query('SELECT * from Usuario where emailUsuario=?;',[values[0]],
+		function(error, results, fields){
+			if(error){
+				res.send(JSON.stringify({"status": 500,"error": error, "response": null}));
+			} else{
+				var senhaEhValida = bcrypt.compareSync(values[1], results[0].senhaUsuario);
+				if(senhaEhValida){
+					var token = jwt.sign({ id: results[0].idUsuario }, config.secret, {
+						expiresIn: 86400
+					});
+
+					res.status(200).send({ auth: true, token: token });
+				}else{
+					res.status(401).send({ auth: false, token: null })
+				}
+			}
+		}
+	);
+});
+
+
+//ALTERANDO PARA RECEBER AUTENTICACAO
+/* PATCH Usuarios */
+router.patch('/meu', verificarToken, function(req, res, next){
+	var values = [];
+	var consultar = 'SELECT * FROM Usuario WHERE idUsuario='+req.idUsuario+" OR emailUsuario='"+[req.body.emailUsuario];
+	consultar += "';";
+	var idUsuarioASerAlterado;
+	connection.query(consultar, function(error, results, fields){
+		if(error){
+			res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+		}else{
+			console.log(typeof results[1]);
+			if(!(typeof results[1] === 'undefined')){
+				var usuarioDoToken;
+				if(results[0].idUsuario===req.idUsuario){
+					usuarioDoToken = results[0];
+					idUsuarioASerAlterado = results[1].idUsuario;
+					console.log('agora vai');
+				}else {
+					usuarioDoToken = results[1];
+					idUsuarioASerAlterado = results[0].idUsuario;
+					console.log("talvez aqui");
+				}
+				if(usuarioDoToken.admUsuario == "0"){
+					res.status(402).send({ auth:false, 
+                			message: 'Não autorizado.' });
+					console.log("aqui sim");
+				}
+			}else {
+				idUsuarioASerAlterado = results[0].idUsuario;
+				console.log("wowowowo"+idUsuarioASerAlterado);
+			}
+		}
+		if(typeof(idUsuarioASerAlterado) === 'undefined'){
+                	console.log('asdasdad');
+        	        return;
+	        }
+	//aqui
+		console.log('cheguei aqui');
+	        if(!(typeof req.body.nomeUsuario === 'undefined')){
+	                var valor = req.body.nomeUsuario+"'";
+	                values.push("nomeUsuario='"+valor);
+	        }
+	        if(!(typeof req.body.senhaUsuario === 'undefined')){
+	                var valor = bcrypt.hashSync(req.body.senhaUsuario)+"'";
+	                values.push("senhaUsuario='"+valor);
+	        }
+	        if(!(typeof req.body.dataNascimentoUsuario === 'undefined')){
+	                var valor = req.body.dataNascimentoUsuario+"'";
+	                values.push("dataNascimentoUsuario='"+valor);
+	        }
+		if(!(typeof req.body.admUsuario === 'undefined')){
+                        var valor = req.body.admUsuario;
+                        values.push("admUsuario="+valor);
+                }
+
+	        console.log(values.toString());
+	        var consulta = "UPDATE Usuario SET "+values.toString()+" WHERE idUsuario="+idUsuarioASerAlterado+";";
+	        console.log(consulta);
+	        connection.query("UPDATE Usuario SET "+values.toString()+" WHERE idUsuario="+idUsuarioASerAlterado+";", function(err, results, fields){
+	                if(err){
+        	                res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
+        	        } else {
+        	                res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+        	        }
+       		});
+
+	//aqui
+	});
+});
+//ALTERANDO PARA RECEBER AUTENTICACAO
+router.delete('/:id',verificarToken,function(req, res, next){
+	connection.query("SELECT admUsuario FROM Usuario WHERE idUsuario=?;",[req.idUsuario],function(error, results, fields){
+		if(error){
+			res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
+		}else{
+			if(results[0].admUsuario===1){
+			var consulta = "DELETE FROM Usuario WHERE idUsuario="+req.params.id+";";
+		        connection.query(consulta, function(error, results, fields){
+		                if(error){
+		                        res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
+		                } else {
+		                        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+		                }
+		        });
+			
+		}
+	});
+});
+
+module.exports = router;
+
+
