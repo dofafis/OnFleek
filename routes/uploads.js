@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-router.post('/uploads', function(req, res) {
+router.post('/', function(req, res) {
         console.log('cheguei aqui');
   if (!req.files)
     return res.status(400).send('No files were uploaded.');
