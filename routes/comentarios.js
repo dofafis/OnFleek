@@ -71,16 +71,20 @@ router.patch('/', verificarToken, function(req, res, next){
 		                	if(!(typeof req.body.comentario === 'undefined')){
 	                        		var valor = req.body.comentario+"'";
 	                        		values.push("descricaoComentario='"+valor);
-	                		}
+						var consulta = "UPDATE Usuario_Comenta_Titulo SET "+values.toString()+" WHERE idComentario="+req.body.idComentario+";";
+                                        	connection.query(consulta, function(err, results, fields){
+                                                	if(err){
+                                                	        res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
+                                                	} else {
+                                                	        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+                                                	}
+                                        	});
+	                		}else{
+						res.send(JSON.stringify({ "status": 204 , "message": "Comentário editado não foi enviado no corpo da requisição" }));
+					}
 
-	                		var consulta = "UPDATE Usuario_Comenta_Titulo SET "+values.toString()+" WHERE idComentario="+req.body.idComentario+";";
-	               			connection.query(consulta, function(err, results, fields){
-	                	        	if(err){
-	                        		        res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
-	        	                	} else {
-		                        	        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
-		                        	}
-		                	});
+				}else{
+					res.send(JSON.stringify({ "status": 401, "auth": false, "message": "Usuario não autorizado a executar esta ação" }));
 				}
 			});
 		}
@@ -88,7 +92,7 @@ router.patch('/', verificarToken, function(req, res, next){
 });
 
 //ALTERANDO PARA COMENTARIO
-router.delete('/:id', verificarToken, function(req, res, next){
+router.delete('/', verificarToken, function(req, res, next){
         var values = [];
         var consultar = 'SELECT * FROM Usuario WHERE idUsuario='+[req.idUsuario];
         consultar += ";";
@@ -97,13 +101,14 @@ router.delete('/:id', verificarToken, function(req, res, next){
                 if(error){
                         res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
                 }else{
-                        consulta = "SELECT * FROM Usuario_Comenta_Titulo WHERE idComentario="+req.params.id;
+			var usuarioToken = results[0];
+                        consulta = "SELECT * FROM Usuario_Comenta_Titulo WHERE idComentario="+req.body.idComentario;
                         consulta += ";";
                         connection.query(consulta, function(error, results, fields){
                                 if(error){
                                         res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
-                                }else if(results[0].Usuario_idUsuario===req.idUsuario){
-                                        var consulta = "DELETE FROM Usuario_Comenta_Titulo WHERE idComentario="+req.params.id+";";
+                                }else if(results[0].Usuario_idUsuario===req.idUsuario || usuarioToken.admUsuario===1){
+                                        var consulta = "DELETE FROM Usuario_Comenta_Titulo WHERE idComentario="+req.body.idComentario+";";
                                         connection.query(consulta, function(err, results, fields){
                                                 if(err){
                                                         res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
@@ -111,7 +116,9 @@ router.delete('/:id', verificarToken, function(req, res, next){
                                                         res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
                                                 }
                                         });
-                                }
+                                }else if(usuarioToken.admUsuario===0){
+					res.send(JSON.stringify({ "status": 401, "auth": false, "message": "Usuario não autorizado a executar esta ação" }));
+				}
                         });
                 }
         });

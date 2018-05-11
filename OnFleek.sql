@@ -37,8 +37,6 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `OnFleek`.`Titulo` (
   `idTitulo` INT NOT NULL AUTO_INCREMENT,
-  `nomePortuguesTitulo` VARCHAR(200) NOT NULL,
-  `nomeOriginalTitulo` VARCHAR(200) NOT NULL,
   `sinopseTitulo` VARCHAR(700) NOT NULL,
   `diretorTitulo` VARCHAR(200) NOT NULL,
   `anoProducaoTitulo` INT NOT NULL,

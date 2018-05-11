@@ -8,16 +8,17 @@ var mysql = require('mysql');
 var bodyParser = require("body-parser");
 var indexRouter = require('./routes/index');
 var cors = require("cors");
+var fs = require('fs');
 
 const fileUpload = require('express-fileupload');
 
 var multer = require('multer');
-var uploads = multer({ dest: 'uploads/' });
+var files = multer({ dest: 'files/' });
 //var usersRouter = require('./routes/users');
 var titulosRouter = require('./routes/titulos');
 var usuariosRouter = require('./routes/usuarios');
 var comentariosRouter = require('./routes/comentarios');
-var uploadsRouter = require('./routes/uploads');
+var filesRouter = require('./routes/files');
 
 var app = express();
 
@@ -34,9 +35,6 @@ app.use(function(req, res, next){
 });
 //Database Connection
 
-//upload
-app.use(fileUpload());
-//upload
 
 // view engine setup
 app.engine('pug', require('pug').__express);
@@ -47,19 +45,26 @@ app.use(express.static('public'));
 //app.use();
 //Middlewares
 app.use(logger('dev'));
+app.use(logger('common', {
+  stream: fs.createWriteStream(path.join('./', 'access.log'), {flags: 'a'})
+}))
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+//upload
+app.use(fileUpload());
+//upload
+
 app.use(express.static('public'));
 
 app.use('/', indexRouter);
 app.use('/titulos', titulosRouter);
 app.use('/usuarios', usuariosRouter);
 app.use('/comentarios', comentariosRouter);
-app.use('/uploads', uploadsRouter);
+app.use('/files', filesRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

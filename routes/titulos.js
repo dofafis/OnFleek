@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var verificarToken = require('./verificarToken');
-
+var saveReq = require('./saveReq');
 /* GET titulos listing. */
 router.get('/', function(req, res, next) {
 	connection.query('SELECT * from Titulo;', function (error, results, fields) {
@@ -38,17 +38,20 @@ router.get('/:id/comentarios', function(req, res, next){
 });
 
 /* POST titulos */
-router.post('/',verificarToken,function(req, res, next) {
-	connection.query('SELECT admUsuario FROM Usuario WHERE idUsuario=?;',[req.idUsuario],function(error,results,fields){
+router.post('/', verificarToken,function(req, res, next) {
+	connection.query('SELECT admUsuario,emailUsuario FROM Usuario WHERE idUsuario=?;',[req.idUsuario],function(error,results,fields){
 		if(error){
 			console.log("passei por aqui!");
 			res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
 		}else{
 			if(results[0].admUsuario===1){
+				console.log(results[0].emailUsuario);
+				//console.log(req.headers);
+				//console.log(req.body);
 				var jsondata = req.body;
 				var values = [jsondata.nomePortuguesTitulo,jsondata.nomeOriginalTitulo,
-					jsondata.sinopseTitulo,jsondata.diretorTitulo,jsondata.anoProducaoTitulo,
-					jsondata.duracaoMinutosTitulo,jsondata.classificacaoTitulo,
+					jsondata.sinopseTitulo,jsondata.diretorTitulo,parseInt(jsondata.anoProducaoTitulo),
+					parseInt(jsondata.duracaoMinutosTitulo),jsondata.classificacaoTitulo,
 					jsondata.paisOrigemTitulo,jsondata.generoTitulo,jsondata.tipoTitulo,
 					jsondata.estreiaMundialTitulo,jsondata.estreiaBrasilTitulo];
 
@@ -89,11 +92,11 @@ router.patch('/:id',verificarToken, function(req, res, next){
                 values.push("diretorTitulo='"+valor);
         }
 	if(!(typeof req.body.anoProducaoTitulo === 'undefined')){
-                var valor = req.body.anoProducaoTitulo+"'";
+                var valor = parseInt(req.body.anoProducaoTitulo)+"'";
                 values.push("anoProducaoTitulo='"+valor);
         }
 	if(!(typeof req.body.duracaoMinutosTitulo === 'undefined')){
-                var valor = req.body.duracaoMinutosTitulo+"'";
+                var valor = parseInt(req.body.duracaoMinutosTitulo)+"'";
                 values.push("duracaoMinutosTitulo='"+valor);
         }
 	if(!(typeof req.body.classificacaoTitulo === 'undefined')){
@@ -122,7 +125,7 @@ router.patch('/:id',verificarToken, function(req, res, next){
         }
 
 	console.log(values.toString());
-	var consulta = "UPDATE Titulo SET "+values.toString()+" WHERE idTitulo="+req.params.id+";";
+	var consulta = "UPDATE Titulo SET "+values.toString()+" WHERE idTitulo="+parseInt(req.params.id)+";";
 
 	connection.query(consulta, function(error, results, fields){
 		if(error){
@@ -134,7 +137,7 @@ router.patch('/:id',verificarToken, function(req, res, next){
 });
 
 router.delete('/:id',function(req, res, next){
-	var consulta = "DELETE FROM Titulo WHERE idTitulo="+req.params.id+";";
+	var consulta = "DELETE FROM Titulo WHERE idTitulo="+parseInt(req.params.id)+";";
 
         connection.query(consulta, function(error, results, fields){
                 if(error){

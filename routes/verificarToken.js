@@ -2,8 +2,8 @@ var jwt = require('jsonwebtoken');
 var config = require('../config');
 
 function verificarToken(req, res, next){
-	var token = req.headers['access-token'];
-
+var token = req.headers['access-token'];
+	
 	if(!token){
 		res.send(JSON({ "status": 403,"auth": false, "message": 'Token não fornecido.' }));
 	}else{
