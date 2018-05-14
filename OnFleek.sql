@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Lista_Titulo` (
   `Usuario_idUsuario` INT NOT NULL,
   `Titulo_idTitulo` INT NOT NULL,
   `nomeLista` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`Usuario_idUsuario`, `Titulo_idTitulo`),
+  PRIMARY KEY (`Usuario_idUsuario`, `Titulo_idTitulo`, `nomeLista`),
   CONSTRAINT `fk_Usuario_has_Titulo_Usuario1`
     FOREIGN KEY (`Usuario_idUsuario`)
     REFERENCES `OnFleek`.`Usuario` (`idUsuario`)
@@ -91,6 +91,24 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Lista_Titulo` (
     REFERENCES `OnFleek`.`Titulo` (`idTitulo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `OnFleek`.`generosTitulo` (
+	`idGenero` INT NOT NULL AUTO_INCREMENT,
+	`genero` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`idGenero`))
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `OnFleek`.`tiposTitulo` (
+        `idTipo` INT NOT NULL AUTO_INCREMENT,
+        `tipo` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`idTipo`))
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `OnFleek`.`paisesTitulo` (
+        `idPais` INT NOT NULL AUTO_INCREMENT,
+        `pais` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`idPais`))
 ENGINE = InnoDB;
 
 

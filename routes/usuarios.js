@@ -1,3 +1,4 @@
+
 var express = require('express');
 var router = express.Router();
 
@@ -21,6 +22,7 @@ router.get('/todos', function(req, res, next) {
 
 //GET Usuario especifico
 router.get('/meu', verificarToken, function(req, res, next) {
+	console.log(req.headers);
 	connection.query('SELECT idUsuario,nomeUsuario,emailUsuario,dataNascimentoUsuario,admUsuario FROM Usuario WHERE idUsuario=?;', [req.idUsuario], 
 		function(error, results, fields){
 			if(error){
@@ -146,7 +148,7 @@ router.patch('/meu', verificarToken, function(req, res, next){
                 }
 		if(!(typeof req.body.emailUsuario === 'undefined')){
                         var valor = req.body.emailUsuario;
-                        values.push("admUsuario="+valor);
+                        values.push("emailUsuario="+valor);
                 }
 
 
