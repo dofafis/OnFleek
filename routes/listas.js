@@ -11,7 +11,7 @@ ROTAS:
 var express = require('express');
 var router = express.Router();
 var verificarToken = require('./verificarToken');
-
+var connection = require('../db');
 /* GET listas listing. */
 router.get('/:usuario/todos', function(req, res, next) {
         connection.query('SELECT nomeLista from Usuario_Lista_Titulo where Usuario_idUsuario=?;', [req.params.usuario], function (error, results, fields) {
@@ -25,7 +25,7 @@ router.get('/:usuario/todos', function(req, res, next) {
         });
 });
 
-router.get('/:usuario', function(req, res, next) {
+router.get('/:usuario/:nomelista', function(req, res, next) {
         connection.query('SELECT Titulo_idTitulo as idTitulo from Usuario_Lista_Titulo where Usuario_idUsuario=? AND nomeLista=?;', [req.params.usuario], [req.params.nomelista], function (error, results, fields) {
                 if(error){
                         res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 

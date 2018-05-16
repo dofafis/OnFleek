@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var verificarToken = require('./verificarToken');
-
+var connection = require('../db');
 /* GET comentarios listing. */
 router.get('/', function(req, res, next) {
         connection.query('SELECT idComentario,Usuario_idUsuario AS idUsuario,Titulo_idTitulo AS idTitulo,descricaoComentario AS comentario from Usuario_Comenta_Titulo;', function (error, results, fields) {

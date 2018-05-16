@@ -1,7 +1,7 @@
 
 var express = require('express');
 var router = express.Router();
-
+var connection = require('../db');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
 var config = require('../config');
@@ -66,7 +66,7 @@ router.post('/cadastro',function(req, res, next) {
 						var token = jwt.sign({id: results[0].idUsuario}, config.secret, {
 							expiresIn: 86400 //24 horas
 						});
-						res.send(JSON.stringify({ "status": 200,"auth": true, "token": token}));
+						res.send(JSON.stringify({ "status": 200,"error": null, "token": token}));
 					}
 				});
 			}
@@ -134,10 +134,6 @@ router.patch('/meu', verificarToken, function(req, res, next){
 	                var valor = req.body.nomeUsuario+"'";
 	                values.push("nomeUsuario='"+valor);
 	        }
-	        if(!(typeof req.body.senhaUsuario === 'undefined')){
-	                var valor = bcrypt.hashSync(req.body.senhaUsuario)+"'";
-	                values.push("senhaUsuario='"+valor);
-	        }
 	        if(!(typeof req.body.dataNascimentoUsuario === 'undefined')){
 	                var valor = req.body.dataNascimentoUsuario+"'";
 	                values.push("dataNascimentoUsuario='"+valor);
@@ -162,6 +158,57 @@ router.patch('/meu', verificarToken, function(req, res, next){
        		});
 	});
 });
+
+router.patch('/meu/senha', verificarToken, function(req, res, next){
+        var values = [];
+        var consultar = 'SELECT * FROM Usuario WHERE idUsuario='+req.idUsuario+" OR emailUsuario='"+[req.body.email];
+        consultar += "';";
+        var idUsuarioASerAlterado, senhaAntiga;
+        connection.query(consultar, function(error, results, fields){
+                if(error){
+                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+                }else{
+                        if(!(typeof results[1] === 'undefined')){
+                                var usuarioDoToken;
+                                if(results[0].idUsuario===req.idUsuario){
+                                        usuarioDoToken = results[0];
+                                        idUsuarioASerAlterado = results[1].idUsuario;
+					senhaAntiga = results[1].senhaUsuario;
+                                }else {
+                                        usuarioDoToken = results[1];
+                                        idUsuarioASerAlterado = results[0].idUsuario;
+					senhaAntiga = results[0].senhaUsuario;
+                                }
+                                if(usuarioDoToken.admUsuario == "0"){
+                                        res.send(JSON.stringify({ "status": 402,"auth":false, 
+                                        "message": 'Não autorizado.' }));
+                                }
+                        }else {
+                                idUsuarioASerAlterado = results[0].idUsuario;
+				senhaAntiga = results[0].senhaUsuario;
+                        }
+                }
+                if(typeof(idUsuarioASerAlterado) === 'undefined'){
+                        return;
+                }
+		if(req.body.novaSenha===req.body.confirmaSenha && bcrypt.compareSync(senhaAntiga, req.body.senhaAtual)){
+                        var valor = bcrypt.hashSync(req.body.novaSenha)+"'";
+                        values.push("senhaUsuario='"+valor);
+                }
+
+
+                var consulta = "UPDATE Usuario SET "+values.toString()+" WHERE idUsuario="+idUsuarioASerAlterado+";";
+                connection.query("UPDATE Usuario SET "+values.toString()+" WHERE idUsuario="+idUsuarioASerAlterado+";", function(err, results, fields){
+                        if(err){
+                                res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
+                        } else {
+                                res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+                        }
+                });
+        });
+});
+
+
 //ALTERANDO PARA RECEBER AUTENTICACAO
 router.delete('/',verificarToken,function(req, res, next){
 	connection.query("SELECT admUsuario FROM Usuario WHERE idUsuario=?;",[req.idUsuario],function(error, results, fields){

@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var connection = require('../db');
 
 router.post('/uploads', function(req, res) {
         console.log('cheguei aqui');

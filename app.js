@@ -4,7 +4,6 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var mysql = require('mysql');
 var bodyParser = require("body-parser");
 //var indexRouter = require('./routes/index');
 var cors = require("cors");
@@ -19,14 +18,16 @@ var titulosRouter = require('./routes/titulos');
 var usuariosRouter = require('./routes/usuarios');
 var comentariosRouter = require('./routes/comentarios');
 var listasRouter = require('./routes/listas');
-//var indexRouter = require('./routes/index');
+var indexRouter = require('./routes/index');
+var mydebug = require('./mydebug');
 //ALTERAR DEPOIS
 var filesRouter = require('./routes/files');
 //ALTERAR DEPOIS
+var connection = require('./db');
 
 var app = express();
 
-//Database Connection
+/*Database Connection
 app.use(function(req, res, next){
         global.connection = mysql.createPool({
 		connectionLimit: 10000,
@@ -35,13 +36,13 @@ app.use(function(req, res, next){
                 database : 'OnFleek',
                 password : process.env.DB_PASS
         });
-        connection.getConnection(function(err, connection){
-		console.log("Conectado com sucesso!");
-	});
+//        connection.getConnection(function(err, connection){
+//		console.log("Conectado com sucesso!");
+//	});
         next();
 });
 //Database Connection
-
+*/
 
 // view engine setup
 app.engine('pug', require('pug').__express);
@@ -66,10 +67,9 @@ app.use(cookieParser());
 app.use(fileUpload());
 //upload
 
-app.use(express.static('public'));
 
-//app.use('/', indexRouter);
-app.use('/titulos', titulosRouter);
+app.use('/', indexRouter);
+app.use('/titulos', mydebug, titulosRouter);
 app.use('/usuarios', usuariosRouter);
 app.use('/comentarios', comentariosRouter);
 app.use('/listas', listasRouter);

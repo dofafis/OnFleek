@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router();
+var mydebug = require('../mydebug');
 var verificarToken = require('./verificarToken');
-var saveReq = require('./saveReq');
+var connection = require('../db');
 /* GET titulos listing. */
 router.get('/', function(req, res, next) {
 	connection.query('SELECT * from Titulo;', function (error, results, fields) {
@@ -15,7 +16,11 @@ router.get('/', function(req, res, next) {
         });
 });
 
-router.get('/:id', function(req, res, next) {
+router.get('/:id', mydebug, function(req, res, next) {
+	if(req.params.id==="generos" || req.params.id==="tipos" || req.params.id==="paises"){
+		res.redirect('/titulos/'+req.params.id+'/todos');
+		return;
+	}
         connection.query('SELECT * FROM Titulo where idTitulo=?;', req.params.id, function (error, results, fields) {
                 if(error){
                         res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
@@ -26,7 +31,7 @@ router.get('/:id', function(req, res, next) {
                 }
         });
 });
-router.get('/:id/comentarios', function(req, res, next){
+router.get('/:id/comentarios', mydebug, function(req, res, next){
 	var consulta = "SELECT idComentario,Usuario_idUsuario AS idUsuario,Titulo_idTitulo AS idTitulo,descricaoComentario AS comentario FROM Usuario_Comenta_Titulo WHERE Titulo_idTitulo="+req.params.id;
 	connection.query(consulta+";",function(error, results, fields){
 		if(error){
@@ -38,7 +43,7 @@ router.get('/:id/comentarios', function(req, res, next){
 });
 
 /* POST titulos */
-router.post('/', verificarToken,function(req, res, next) {
+router.post('/', mydebug, verificarToken,function(req, res, next) {
 	connection.query('SELECT admUsuario,emailUsuario FROM Usuario WHERE idUsuario=?;',[req.idUsuario],function(error,results,fields){
 		if(error){
 			console.log("passei por aqui!");
@@ -72,7 +77,7 @@ router.post('/', verificarToken,function(req, res, next) {
 });
 
 /* PATCH títulos */
-router.patch('/:id',verificarToken, function(req, res, next){
+router.patch('/:id', mydebug,verificarToken, function(req, res, next){
 	var jsondata = req.body;
 	var values = [];
 	if(!(typeof req.body.nomePortuguesTitulo === 'undefined')){
@@ -136,7 +141,7 @@ router.patch('/:id',verificarToken, function(req, res, next){
 	});
 });
 
-router.delete('/:id',function(req, res, next){
+router.delete('/:id', mydebug,function(req, res, next){
 	var consulta = "DELETE FROM Titulo WHERE idTitulo="+parseInt(req.params.id)+";";
 
         connection.query(consulta, function(error, results, fields){
@@ -150,8 +155,8 @@ router.delete('/:id',function(req, res, next){
 });
 
 
-router.get('/generos', function(req, res, next) {
-        connection.query('SELECT generos from generosTitulo;', function (error, results, fields) {
+router.get('/generos/todos', function(req, res, next) {
+        connection.query('SELECT genero from generosTitulo;', function (error, results, fields) {
                 if(error){
                         res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
                         //If there is error, we send the error in the error section with 500 status
@@ -162,7 +167,7 @@ router.get('/generos', function(req, res, next) {
         });
 });
 
-router.get('/tipos', function(req, res, next) {
+router.get('/tipos/todos', function(req, res, next) {
         connection.query('SELECT tipo from tiposTitulo;', function (error, results, fields) {
                 if(error){
                         res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
@@ -174,7 +179,7 @@ router.get('/tipos', function(req, res, next) {
         });
 });
 
-router.get('/paises', function(req, res, next) {
+router.get('/paises/todos', function(req, res, next) {
         connection.query('SELECT pais from paisesTitulo;', function(error, results, fields){
                 if(error){
                         res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
