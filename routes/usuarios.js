@@ -7,6 +7,10 @@ var bcrypt = require('bcryptjs');
 var config = require('../config');
 var verificarToken = require('./verificarToken');
 
+var gm = require('gm').subClass({ imageMagick: true });
+var ImageResize = require('node-image-resize');
+var fs = require('fs');
+
 /* GET Usuarios listing. */
 router.get('/todos', function(req, res, next) {
 	connection.query('SELECT idUsuario,nomeUsuario,emailUsuario,dataNascimentoUsuario,admUsuario from Usuario;', function (error, results, fields) {
@@ -45,12 +49,71 @@ router.get('/:id/comentarios', function(req, res, next){
         });
 });
 
+//GET listas de um usuario específico
+router.get('/:id/listas', verificarToken, function(req, res, next){
+	connection.query("SELECT nomeLista FROM Usuario_Lista_Titulo WHERE Usuario_idUsuario=?;", req.params.id, function(error, results, fields){
+		if(error)
+			res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+		else
+			res.send(JSON.stringify({ "status": 200, "error": null, "response": results }));
+	});
+});
+
+//foto perfil
+router.post('/fotos', verificarToken, function(req, res) {
+	if (!req.files)
+		return res.send(JSON.stringify({ "status": 400, "message": 'Não foi feito upload do arquivo.', "response": null }));
+
+	// The name of the input field (i.e. "sampleFile") is used to retrieve the up$
+	var fotoPerfil = req.files.fotoPerfil;
+        // Use the mv() method to place the file somewhere on your server
+        var caminhoFoto = req.body.idUsuario+'_.'+req.body.formato;
+        console.log(caminhoFoto);
+        fotoPerfil.mv('./fotosPerfil/'+caminhoFoto, function(err) {
+        	if (err){
+        		res.send(JSON.stringify({ "status": 500, "message": "Feito upload, porém ocorreram erros na manipulação do mesmo, tente novamente. Verifique o formato do arquivo.", "response": null }));
+                        console.log(err);
+                }else{
+			gm('./fotosPerfil/'+caminhoFoto).options({imageMagick: true}).resize(240,240).write('./fotosPerfil/'+caminhoFoto, function (err) {
+				if (!err) console.log('Done');
+				else console.log(err);
+			});
+		}
+	});
+	var caminhoFotoInsert = "'"+caminhoFoto;
+	caminhoFotoInsert += "'";
+	var consulta = 'INSERT INTO foto_Usuario (Usuario_idUsuario,caminhoFoto) VALUES ('+req.body.idUsuario+','+caminhoFotoInsert+') ON DUPLICATE KEY UPDATE Usuario_idUsuario='+req.body.idUsuario+', caminhoFoto='+caminhoFotoInsert+';'
+	connection.query(consulta, function(error, results, fields){
+		if(error){
+			res.send(JSON.stringify({ "status": 500, "message": "Erro ao salvar a foto na pasta. Tente novamente", "response": null }));
+			console.log(error);
+		}else
+			res.send(JSON.stringify({ "status": 200, "message": 'Upload concluido com sucesso!', "response": null }));
+	});
+});
+
+
+//DOWNLOAD
+router.get('/fotos/:id', function(req, res){
+	connection.query('SELECT * FROM foto_Usuario WHERE Usuario_idUsuario=?;',[req.params.id], function(error, results, fields){
+		if(error){
+			console.log(error);
+			res.send(JSON.stringify({ "status": 500, "message": "Erro ao pesquisar foto do usuário, tente novamente, por favor.", "response": null }));
+		}else{
+			var file = './fotosPerfil/'+results[0].caminhoFoto;
+        		res.download(file);
+		}
+	});
+});
+
+//foto perfil
+
 
 /* POST Usuarios */
 router.post('/cadastro',function(req, res, next) {
 	var jsondata = req.body;
 	console.log(jsondata.emailUsuario);
-	var values = [jsondata.nomeUsuario, jsondata.dataNascimentoUsuario, 
+	var values = [jsondata.nomeUsuario, jsondata.dataNascimentoUsuario,
 		jsondata.emailUsuario, bcrypt.hashSync(jsondata.senhaUsuario), jsondata.admUsuario];
 
 	connection.query('INSERT INTO Usuario (nomeUsuario,dataNascimentoUsuario,emailUsuario,senhaUsuario,admUsuario) VALUES (?);', [values], 
@@ -89,9 +152,9 @@ router.post('/login', function(req, res, next){
 						expiresIn: 86400
 					});
 
-					res.send(JSON.stringify({ "status": 200,"auth": true, "token": token }));
+					res.send(JSON.stringify({ "status": 200,"error": null, "token": token }));
 				}else{
-					res.send(JSON.stringify({ "status": 401,"auth": false, "token": null }));
+					res.send(JSON.stringify({ "status": 401,"error": "Erro ao fazer login, tente novamente.", "token": null }));
 				}
 			}
 		}
@@ -153,7 +216,7 @@ router.patch('/meu', verificarToken, function(req, res, next){
 	                if(err){
         	                res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
         	        } else {
-        	                res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+        	                res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
         	        }
        		});
 	});
@@ -202,7 +265,7 @@ router.patch('/meu/senha', verificarToken, function(req, res, next){
                         if(err){
                                 res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
                         } else {
-                                res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+                                res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
                         }
                 });
         });
@@ -222,7 +285,7 @@ router.delete('/',verificarToken,function(req, res, next){
 			                if(error){
 			                        res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
 			                } else {
-			                        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+			                        res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedido!"}));
 			                }
 			        });
 			}else{

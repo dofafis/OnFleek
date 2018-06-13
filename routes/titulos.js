@@ -31,6 +31,8 @@ router.get('/:id', mydebug, function(req, res, next) {
                 }
         });
 });
+
+
 router.get('/:id/comentarios', mydebug, function(req, res, next){
 	var consulta = "SELECT idComentario,Usuario_idUsuario AS idUsuario,Titulo_idTitulo AS idTitulo,descricaoComentario AS comentario FROM Usuario_Comenta_Titulo WHERE Titulo_idTitulo="+req.params.id;
 	connection.query(consulta+";",function(error, results, fields){
@@ -42,8 +44,20 @@ router.get('/:id/comentarios', mydebug, function(req, res, next){
 	});
 });
 
+//GET listas em que o titulo esta
+router.get('/:id/listas', function(req, res, next){
+	connection.query('SELECT * FROM Usuario_Lista_Titulo WHERE Titulo_idTitulo=?;', req.params.id, function(error, results, fields){
+		if(error){
+			res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+		}else{
+			res.send(JSON.stringify({ "status": 200, "error": null, "response": results }));
+		}
+	});
+});
+
 /* POST titulos */
 router.post('/', mydebug, verificarToken,function(req, res, next) {
+	console.log("cheguei aqui");
 	connection.query('SELECT admUsuario,emailUsuario FROM Usuario WHERE idUsuario=?;',[req.idUsuario],function(error,results,fields){
 		if(error){
 			console.log("passei por aqui!");
@@ -65,7 +79,7 @@ router.post('/', mydebug, verificarToken,function(req, res, next) {
 						if(error){
 							res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
 						} else {
-							res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+							res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
 						}
 				});
 			}else{
@@ -77,7 +91,7 @@ router.post('/', mydebug, verificarToken,function(req, res, next) {
 });
 
 /* PATCH títulos */
-router.patch('/:id', mydebug,verificarToken, function(req, res, next){
+router.patch('/:id', verificarToken, function(req, res, next){
 	var jsondata = req.body;
 	var values = [];
 	if(!(typeof req.body.nomePortuguesTitulo === 'undefined')){
@@ -136,11 +150,13 @@ router.patch('/:id', mydebug,verificarToken, function(req, res, next){
 		if(error){
 			res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
 		} else {
-			res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+			res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
 		}
 	});
 });
 
+
+//ADICIONAR VERIFICAÇÃO DE TOKEN
 router.delete('/:id', mydebug,function(req, res, next){
 	var consulta = "DELETE FROM Titulo WHERE idTitulo="+parseInt(req.params.id)+";";
 

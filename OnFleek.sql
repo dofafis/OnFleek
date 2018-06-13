@@ -111,6 +111,17 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`paisesTitulo` (
   PRIMARY KEY (`idPais`))
 ENGINE = InnoDB;
 
+CREATE TABLE IF NOT EXISTS `OnFleek`.`foto_Usuario` (
+  `Usuario_idUsuario` INT NOT NULL,
+  `caminhoFoto` VARCHAR(700) NOT NULL,
+  PRIMARY KEY (`Usuario_idUsuario`,`caminhoFoto`),
+  CONSTRAINT `fk_Usuario_caminho_Foto`
+    FOREIGN KEY (`Usuario_idUsuario`)
+    REFERENCES `OnFleek`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;

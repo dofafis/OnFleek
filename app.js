@@ -20,38 +20,22 @@ var comentariosRouter = require('./routes/comentarios');
 var listasRouter = require('./routes/listas');
 var indexRouter = require('./routes/index');
 var mydebug = require('./mydebug');
-//ALTERAR DEPOIS
 var filesRouter = require('./routes/files');
-//ALTERAR DEPOIS
 var connection = require('./db');
 
 var app = express();
-
-/*Database Connection
-app.use(function(req, res, next){
-        global.connection = mysql.createPool({
-		connectionLimit: 10000,
-                host     : process.env.DB_HOST,
-                user     : process.env.DB_USER,
-                database : 'OnFleek',
-                password : process.env.DB_PASS
-        });
-//        connection.getConnection(function(err, connection){
-//		console.log("Conectado com sucesso!");
-//	});
-        next();
-});
-//Database Connection
-*/
 
 // view engine setup
 app.engine('pug', require('pug').__express);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-
+//Frontend
+app.use('/client', express.static('/home/ubuntu/OnFleek/public/onfleek-client'));
+app.use('/admin', express.static('/home/ubuntu/OnFleek/public/onfleek-admin'));
 app.use('/home', express.static('/home/ubuntu/OnFleek/public/onfleek-site'));
-//app.use();
+//Frontend
+
 //Middlewares
 app.use(logger('dev'));
 app.use(logger('common', {
@@ -63,9 +47,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-//upload
+
 app.use(fileUpload());
-//upload
 
 
 app.use('/', indexRouter);

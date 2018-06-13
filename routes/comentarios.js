@@ -41,7 +41,7 @@ router.post('/', verificarToken, function(req, res, next){
 							if(error){
 	        			                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
         	                			}else{
-								res.send(JSON.stringify({ "status": 200, "error": null, "response": results }));
+								res.send(JSON.stringify({ "status": 200, "error": null, "response": "Consulta bem sucedida!" }));
 							}
 						}
 					);
@@ -76,7 +76,7 @@ router.patch('/', verificarToken, function(req, res, next){
                                                 	if(err){
                                                 	        res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
                                                 	} else {
-                                                	        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+                                                	        res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
                                                 	}
                                         	});
 	                		}else{
@@ -113,7 +113,7 @@ router.delete('/', verificarToken, function(req, res, next){
                                                 if(err){
                                                         res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
                                                 } else {
-                                                        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+                                                        res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
                                                 }
                                         });
                                 }else if(usuarioToken.admUsuario===0){
