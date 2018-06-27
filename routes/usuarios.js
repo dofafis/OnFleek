@@ -51,7 +51,7 @@ router.get('/:id/comentarios', function(req, res, next){
 
 //GET listas de um usuario específico
 router.get('/:id/listas', verificarToken, function(req, res, next){
-	connection.query("SELECT nomeLista FROM Usuario_Lista_Titulo WHERE Usuario_idUsuario=?;", req.params.id, function(error, results, fields){
+	connection.query("SELECT distinct nomeLista FROM Usuario_Lista_Titulo WHERE Usuario_idUsuario=?;", req.params.id, function(error, results, fields){
 		if(error)
 			res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
 		else
@@ -60,7 +60,7 @@ router.get('/:id/listas', verificarToken, function(req, res, next){
 });
 
 //foto perfil
-router.post('/fotos', verificarToken, function(req, res) {
+router.post('/fotos', function(req, res) {
 	if (!req.files)
 		return res.send(JSON.stringify({ "status": 400, "message": 'Não foi feito upload do arquivo.', "response": null }));
 
@@ -78,19 +78,23 @@ router.post('/fotos', verificarToken, function(req, res) {
 				if (!err) console.log('Done');
 				else console.log(err);
 			});
+
+			var caminhoFotoInsert = "'"+caminhoFoto;
+        		caminhoFotoInsert += "'";
+        		var consulta = 'INSERT INTO foto_Usuario (Usuario_idUsuario,caminhoFoto) VALUES ('+req.body.idUsuario+','+caminhoFotoInsert+') ON DUPLICATE KEY UPDATE Usuario_idUsuario='+req.body.idUsuario+',caminhoFoto='+caminhoFotoInsert;
+        		connection.query(consulta, function(error, results, fields){
+        		        if(error){
+        		                res.send(JSON.stringify({ "status": 500, "message": "Erro ao salvar a foto na pasta. Tente novamente", "response": null }));
+        		                console.log(error);
+        		        }else
+        		                res.send(JSON.stringify({ "status": 200, "message": 'Upload concluido com sucesso!', "response": null }));
+			});
+
+
 		}
 	});
-	var caminhoFotoInsert = "'"+caminhoFoto;
-	caminhoFotoInsert += "'";
-	var consulta = 'INSERT INTO foto_Usuario (Usuario_idUsuario,caminhoFoto) VALUES ('+req.body.idUsuario+','+caminhoFotoInsert+') ON DUPLICATE KEY UPDATE Usuario_idUsuario='+req.body.idUsuario+', caminhoFoto='+caminhoFotoInsert+';'
-	connection.query(consulta, function(error, results, fields){
-		if(error){
-			res.send(JSON.stringify({ "status": 500, "message": "Erro ao salvar a foto na pasta. Tente novamente", "response": null }));
-			console.log(error);
-		}else
-			res.send(JSON.stringify({ "status": 200, "message": 'Upload concluido com sucesso!', "response": null }));
-	});
 });
+//'INSERT INTO foto_Usuario (Usuario_idUsuario,caminhoFoto) VALUES (8,\'8_.png\') ON DUPLICATE KEY UPDATE Usuario_idUsuario=8,\'8_.png\'' }
 
 
 //DOWNLOAD
@@ -100,8 +104,8 @@ router.get('/fotos/:id', function(req, res){
 			console.log(error);
 			res.send(JSON.stringify({ "status": 500, "message": "Erro ao pesquisar foto do usuário, tente novamente, por favor.", "response": null }));
 		}else{
-			var file = './fotosPerfil/'+results[0].caminhoFoto;
-        		res.download(file);
+			var file = '/home/ubuntu/OnFleek/fotosPerfil/'+results[0].caminhoFoto;
+        		res.sendFile(file);
 		}
 	});
 });

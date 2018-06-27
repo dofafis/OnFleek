@@ -3,6 +3,11 @@ var router = express.Router();
 var mydebug = require('../mydebug');
 var verificarToken = require('./verificarToken');
 var connection = require('../db');
+
+var gm = require('gm').subClass({ imageMagick: true });
+var ImageResize = require('node-image-resize');
+var fs = require('fs');
+
 /* GET titulos listing. */
 router.get('/', function(req, res, next) {
 	connection.query('SELECT * from Titulo;', function (error, results, fields) {
@@ -10,6 +15,10 @@ router.get('/', function(req, res, next) {
                         res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
                         //If there is error, we send the error in the error section with 500 status
                 } else {
+			for(var i=0;i<results.length;i++){
+				results[i].estreiaMundialTitulo = JSON.stringify(results[i].estreiaMundialTitulo).substring(1,12)+"04:00:00.000Z";
+				results[i].estreiaBrasilTitulo = JSON.stringify(results[i].estreiaBrasilTitulo).substring(1,12)+"04:00:00.000Z";
+			}
                         res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
                         //If there is no error, all is good and response is 200OK.
                 }
@@ -26,7 +35,11 @@ router.get('/:id', mydebug, function(req, res, next) {
                         res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
                         //If there is error, we send the error in the error section with 500 status
                 } else {
-                        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+/*			for(var i=0;i<results.length;i++){
+                                results[i].estreiaMundialTitulo = JSON.stringify(results[i].estreiaMundialTitulo).substring(1,12)+"04:00:00.000Z";
+                                results[i].estreiaBrasilTitulo = JSON.stringify(results[i].estreiaBrasilTitulo).substring(1,12)+"04:00:00.000Z";
+                        }
+*/                      res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
                         //If there is no error, all is good and response is 200OK.
                 }
         });
@@ -55,7 +68,64 @@ router.get('/:id/listas', function(req, res, next){
 	});
 });
 
+router.get('/:idtitulo/imagem', function(req, res, next){
+        connection.query('SELECT * FROM foto_Titulo WHERE Titulo_idTitulo=?;', [req.params.idtitulo], function(error, results, fields){
+                if(error){
+                        console.log(error);
+                        res.send(JSON.stringify({ "status": 500, "message": "Erro ao pesquisar cartao.", "response": null }));
+                }else{
+                        if(results.length === 0)res.send(JSON.stringify({ "status": 500, "message": "Erro ao pesquisar cartao.", "response": null }));
+                        else{
+                                res.sendFile("/home/ubuntu/OnFleek/titulosImagem/"+results[0].caminhoFoto);
+                        }
+                }
+        });
+});
+
 /* POST titulos */
+//foto perfil
+router.post('/fotos', function(req, res) {
+        if (!req.files)
+                return res.send(JSON.stringify({ "status": 400, "message": 'Não foi feito upload do arquivo.', "response": null }));
+
+        // The name of the input field (i.e. "sampleFile") is used to retrieve the up$
+        var tituloImagem = req.files.tituloImagem;
+	var formatoImagem = req.files.tituloImagem.name;
+        // Use the mv() method to place the file somewhere on your server
+	formatoImagem = formatoImagem.split('.');
+        formatoImagem = formatoImagem[formatoImagem.length-1];
+
+        var caminhoFoto = req.body.idTitulo+'_.'+formatoImagem;
+        console.log(caminhoFoto);
+        tituloImagem.mv('./titulosImagem/'+caminhoFoto, function(err) {
+                if (err){
+                        res.send(JSON.stringify({ "status": 500, "message": "Feito upload, porém ocorreram erros na manipulação do mesmo, tente novamente. Verifique o formato do arquivo.", "response": null }));
+                        console.log(err);
+                }else{
+                        gm('./titulosImagem/'+caminhoFoto).options({imageMagick: true}).resize(240,240).write('./tituloImagem/'+caminhoFoto, function (err) {
+                                if (!err) console.log('Done');
+                                else console.log(err);
+                        });
+
+                        var caminhoFotoInsert = "'"+caminhoFoto;
+                        caminhoFotoInsert += "'";
+                        var consulta = 'INSERT INTO foto_Titulo (Titulo_idTitulo,caminhoFoto) VALUES ('+req.body.idTitulo+','+caminhoFotoInsert+') ON DUPLICATE KEY UPDATE Titulo_idTitulo='+req.body.idTitulo+',caminhoFoto='+caminhoFotoInsert;
+                        connection.query(consulta, function(error, results, fields){
+                                if(error){
+                                        res.send(JSON.stringify({ "status": 500, "message": "Erro ao salvar a foto na pasta. Tente novamente", "response": null }));
+                                        console.log(error);
+                                }else
+                                        res.send(JSON.stringify({ "status": 200, "message": 'Upload concluido com sucesso!', "response": null }));
+                        });
+
+
+                }
+        });
+});
+//'INSERT INTO foto_Usuario (Usuario_idUsuario,caminhoFoto) VALUES (8,\'8_.png\') ON DUPLICATE KEY UPDATE Usuario_idUsuario=8,\'8_.png\'' }
+
+
+
 router.post('/', mydebug, verificarToken,function(req, res, next) {
 	console.log("cheguei aqui");
 	connection.query('SELECT admUsuario,emailUsuario FROM Usuario WHERE idUsuario=?;',[req.idUsuario],function(error,results,fields){
@@ -74,12 +144,12 @@ router.post('/', mydebug, verificarToken,function(req, res, next) {
 					jsondata.paisOrigemTitulo,jsondata.generoTitulo,jsondata.tipoTitulo,
 					jsondata.estreiaMundialTitulo,jsondata.estreiaBrasilTitulo];
 
-				connection.query('INSERT INTO Titulo (nomePortuguesTitulo,nomeOriginalTitulo,sinopseTitulo,diretorTitulo,anoProducaoTitulo,duracaoMinutosTitulo,classificacaoTitulo,paisOrigemTitulo,generoTitulo,tipoTitulo,estreiaMundialTitulo,estreiaBrasilTitulo) VALUES (?);', [values], 
+				connection.query('INSERT INTO Titulo (nomePortuguesTitulo,nomeOriginalTitulo,sinopseTitulo,diretorTitulo,anoProducaoTitulo,duracaoMinutosTitulo,classificacaoTitulo,paisOrigemTitulo,generoTitulo,tipoTitulo,estreiaMundialTitulo,estreiaBrasilTitulo) VALUES (?);' , [values], 
 					function (error, results, fields) {
 						if(error){
 							res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
 						} else {
-							res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
+							res.send(JSON.stringify({"status": 200, "error": null, "response": results.insertId}));
 						}
 				});
 			}else{

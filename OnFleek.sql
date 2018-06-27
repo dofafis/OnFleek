@@ -37,7 +37,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `OnFleek`.`Titulo` (
   `idTitulo` INT NOT NULL AUTO_INCREMENT,
-  `sinopseTitulo` VARCHAR(700) NOT NULL,
+  `sinopseTitulo` VARCHAR(7000) NOT NULL,
   `diretorTitulo` VARCHAR(200) NOT NULL,
   `anoProducaoTitulo` INT NOT NULL,
   `duracaoMinutosTitulo` INT NOT NULL,
@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Titulo` (
   `tipoTitulo` VARCHAR(30) NOT NULL,
   `estreiaMundialTitulo` DATE NOT NULL,
   `estreiaBrasilTitulo` DATE,
-  PRIMARY KEY (`idTitulo`))
+  PRIMARY KEY (`idTitulo`),
+  CONSTRAINT Titulo_unique UNIQUE (estreiaMundialTitulo,diretorTitulo,generoTitulo,tipoTitulo))
 ENGINE = InnoDB;
 
 
@@ -68,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Comenta_Titulo` (
   CONSTRAINT `fk_Usuario_has_Titulo_Titulo1`
     FOREIGN KEY (`Titulo_idTitulo`)
     REFERENCES `OnFleek`.`Titulo` (`idTitulo`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -84,12 +85,12 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Lista_Titulo` (
   CONSTRAINT `fk_Usuario_has_Titulo_Usuario1`
     FOREIGN KEY (`Usuario_idUsuario`)
     REFERENCES `OnFleek`.`Usuario` (`idUsuario`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT `fk_Usuario_has_Titulo_Titulo2`
     FOREIGN KEY (`Titulo_idTitulo`)
     REFERENCES `OnFleek`.`Titulo` (`idTitulo`)
-    ON DELETE NO ACTION
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -118,6 +119,17 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`foto_Usuario` (
   CONSTRAINT `fk_Usuario_caminho_Foto`
     FOREIGN KEY (`Usuario_idUsuario`)
     REFERENCES `OnFleek`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `OnFleek`.`foto_Titulo` (
+  `Titulo_idTitulo` INT NOT NULL,
+  `caminhoFoto` VARCHAR(700) NOT NULL,
+  PRIMARY KEY (`Titulo_idTitulo`,`caminhoFoto`),
+  CONSTRAINT `fk_Titulo_caminho_Foto`
+    FOREIGN KEY (`Titulo_idTitulo`)
+    REFERENCES `OnFleek`.`Titulo` (`idTitulo`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
