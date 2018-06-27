@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Comenta_Titulo` (
   CONSTRAINT `fk_Usuario_has_Titulo_Titulo1`
     FOREIGN KEY (`Titulo_idTitulo`)
     REFERENCES `OnFleek`.`Titulo` (`idTitulo`)
-    ON DELETE CASCADE
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Lista_Titulo` (
     FOREIGN KEY (`Titulo_idTitulo`)
     REFERENCES `OnFleek`.`Titulo` (`idTitulo`)
     ON DELETE CASCADE
-    ON UPDATE NO ACTION)
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS `OnFleek`.`generosTitulo` (
@@ -119,8 +119,8 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`foto_Usuario` (
   CONSTRAINT `fk_Usuario_caminho_Foto`
     FOREIGN KEY (`Usuario_idUsuario`)
     REFERENCES `OnFleek`.`Usuario` (`idUsuario`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS `OnFleek`.`foto_Titulo` (
@@ -130,8 +130,19 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`foto_Titulo` (
   CONSTRAINT `fk_Titulo_caminho_Foto`
     FOREIGN KEY (`Titulo_idTitulo`)
     REFERENCES `OnFleek`.`Titulo` (`idTitulo`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `OnFleek`.`foto_Genero` (
+  `Genero_idGenero` INT NOT NULL,
+  `caminhoFoto` VARCHAR(700) NOT NULL,
+  PRIMARY KEY (`Genero_idGenero`,`caminhoFoto`),
+  CONSTRAINT `fk_Genero_caminho_Foto`
+    FOREIGN KEY (`Genero_idGenero`)
+    REFERENCES `OnFleek`.`generosTitulo` (`idGenero`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 

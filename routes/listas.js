@@ -8,7 +8,7 @@ var verificarToken = require('./verificarToken');
 var connection = require('../db');
 /* GET listas listing. Recebe idusuario nos headers e o nomelista no 
 parâmetro e retorna os ids dos títulos que estão na respectiva lista*/
-router.get('/nomelista', function(req, res, next) {
+router.post('/nomelista', function(req, res, next) {
 	var consulta = 'SELECT Titulo_idTitulo from Usuario_Lista_Titulo where Usuario_idUsuario='+req.body.idusuario+" AND nomeLista='";
 	consulta+=req.body.nomelista+"';";
 	console.log(consulta);
@@ -23,7 +23,7 @@ router.get('/nomelista', function(req, res, next) {
         });
 });
 //Mesma coisa que a rota /:nomelista, porém aqui ele só retorna verdadeiro ou falso se existir ou não uma lista desse usuário com esse nome
-router.get('/existelista', function(req, res, next) {
+router.post('/existelista', function(req, res, next) {
 	var consulta = 'SELECT distinct Titulo_idTitulo from Usuario_Lista_Titulo where Usuario_idUsuario='+req.body.idusuario+" AND nomeLista='";
 	consulta+=req.body.nomelista+"';";
         connection.query(consulta, function (error, results, fields) {

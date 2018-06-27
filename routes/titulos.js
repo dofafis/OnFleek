@@ -25,22 +25,48 @@ router.get('/', function(req, res, next) {
         });
 });
 
+router.get('/:idgenero/porgenero', function(req, res, next) {
+        connection.query('SELECT * from generosTitulo where idGenero='+req.params.idgenero+';', function (error, results, fields) {
+                if(error){
+                        res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
+                        //If there is error, we send the error in the error section with 500 status
+                } else {
+			var consulta = "SELECT * FROM Titulo where generoTitulo='";
+			consulta += results[0].genero+"';"; 
+			connection.query(consulta, function(error, results, fields){
+				if(error)res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
+	                        else{
+					res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+                        		//If there is no error, all is good and response is 200OK.
+				}
+			});
+                }
+        });
+});
+
+
 router.get('/:id', mydebug, function(req, res, next) {
 	if(req.params.id==="generos" || req.params.id==="tipos" || req.params.id==="paises"){
 		res.redirect('/titulos/'+req.params.id+'/todos');
 		return;
 	}
-        connection.query('SELECT * FROM Titulo where idTitulo=?;', req.params.id, function (error, results, fields) {
+        connection.query('SELECT * FROM Titulo,foto_Titulo where Titulo.idTitulo=? AND Titulo.idTitulo=foto_Titulo.Titulo_idTitulo;', req.params.id, function (error, results, fields) {
                 if(error){
                         res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
                         //If there is error, we send the error in the error section with 500 status
                 } else {
-/*			for(var i=0;i<results.length;i++){
-                                results[i].estreiaMundialTitulo = JSON.stringify(results[i].estreiaMundialTitulo).substring(1,12)+"04:00:00.000Z";
-                                results[i].estreiaBrasilTitulo = JSON.stringify(results[i].estreiaBrasilTitulo).substring(1,12)+"04:00:00.000Z";
-                        }
-*/                      res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
-                        //If there is no error, all is good and response is 200OK.
+			if(results.length!=0)res.send(JSON.stringify({"status": 500, "error": null, "response": results})); 
+			else{
+				connection.query('SELECT * FROM Titulo where idTitulo=?;',req.params.id,function(error, results, fields){
+					if(error){
+						res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
+					}else{
+						results[0].caminhoFoto = null;
+			                      	res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+        		               	 	//If there is no error, all is good and response is 200OK.
+					}
+				});
+			}
                 }
         });
 });
@@ -72,9 +98,9 @@ router.get('/:idtitulo/imagem', function(req, res, next){
         connection.query('SELECT * FROM foto_Titulo WHERE Titulo_idTitulo=?;', [req.params.idtitulo], function(error, results, fields){
                 if(error){
                         console.log(error);
-                        res.send(JSON.stringify({ "status": 500, "message": "Erro ao pesquisar cartao.", "response": null }));
+                        res.send(JSON.stringify({ "status": 500, "message": "Erro ao pesquisar cartao1.", "response": null }));
                 }else{
-                        if(results.length === 0)res.send(JSON.stringify({ "status": 500, "message": "Erro ao pesquisar cartao.", "response": null }));
+                        if(results.length === 0)res.send(JSON.stringify({ "status": 500, "message": "Inexistente", "response": 0 }));
                         else{
                                 res.sendFile("/home/ubuntu/OnFleek/titulosImagem/"+results[0].caminhoFoto);
                         }
@@ -109,7 +135,7 @@ router.post('/fotos', function(req, res) {
 
                         var caminhoFotoInsert = "'"+caminhoFoto;
                         caminhoFotoInsert += "'";
-                        var consulta = 'INSERT INTO foto_Titulo (Titulo_idTitulo,caminhoFoto) VALUES ('+req.body.idTitulo+','+caminhoFotoInsert+') ON DUPLICATE KEY UPDATE Titulo_idTitulo='+req.body.idTitulo+',caminhoFoto='+caminhoFotoInsert;
+                        var consulta = 'INSERT INTO foto_Titulo (Titulo_idTitulo,caminhoFoto) VALUES ('+req.body.idTitulo+','+caminhoFotoInsert+') ON DUPLICATE KEY UPDATE Titulo_idTitulo='+req.body.idTitulo+',caminhoFoto='+caminhoFotoInsert+' ';
                         connection.query(consulta, function(error, results, fields){
                                 if(error){
                                         res.send(JSON.stringify({ "status": 500, "message": "Erro ao salvar a foto na pasta. Tente novamente", "response": null }));
@@ -124,7 +150,61 @@ router.post('/fotos', function(req, res) {
 });
 //'INSERT INTO foto_Usuario (Usuario_idUsuario,caminhoFoto) VALUES (8,\'8_.png\') ON DUPLICATE KEY UPDATE Usuario_idUsuario=8,\'8_.png\'' }
 
+//GENEROS
+router.get('/:idgenero/imagemgenero', function(req, res, next){
+        connection.query('SELECT * FROM foto_Genero WHERE Genero_idGenero=?;', [req.params.idgenero], function(error, results, fields){
+                if(error){
+                        console.log(error);
+                        res.send(JSON.stringify({ "status": 500, "message": "Erro ao pesquisar cartao1.", "response": null }));
+                }else{
+                        if(results.length === 0)res.send(JSON.stringify({ "status": 500, "message": "Inexistente", "response": 0 }));
+                        else{
+                                res.sendFile("/home/ubuntu/OnFleek/generosImagem/"+results[0].caminhoFoto);
+                        }
+                }
+        });
+});
 
+router.post('/fotosgenero', function(req, res) {
+        if (!req.files)
+                return res.send(JSON.stringify({ "status": 400, "message": 'Não foi feito upload do arquivo.', "response": null }));
+
+        // The name of the input field (i.e. "sampleFile") is used to retrieve the up$
+        var generoImagem = req.files.generoImagem;
+        var formatoImagem = req.files.generoImagem.name;
+        // Use the mv() method to place the file somewhere on your server
+        formatoImagem = formatoImagem.split('.');
+        formatoImagem = formatoImagem[formatoImagem.length-1];
+
+        var caminhoFoto = req.body.idGenero+'_.'+formatoImagem;
+        console.log(caminhoFoto);
+        generoImagem.mv('./generosImagem/'+caminhoFoto, function(err) {
+                if (err){
+                        res.send(JSON.stringify({ "status": 500, "message": "Feito upload, porém ocorreram erros na manipulação do mesmo, tente novamente. Verifique o formato do arquivo.", "response": null }));
+                        console.log(err);
+                }else{
+                        gm('./generosImagem/'+caminhoFoto).options({imageMagick: true}).resize(240,240).write('./generoImagem/'+caminhoFoto, function (err) {
+                                if (!err) console.log('Done');
+                                else console.log(err);
+                        });
+
+                        var caminhoFotoInsert = "'"+caminhoFoto;
+                        caminhoFotoInsert += "'";
+                        var consulta = 'INSERT INTO foto_Genero (Genero_idGenero,caminhoFoto) VALUES ('+req.body.idGenero+','+caminhoFotoInsert+') ON DUPLICATE KEY UPDATE Genero_idGenero='+req.body.idGenero+',caminhoFoto='+caminhoFotoInsert+' ';
+                        connection.query(consulta, function(error, results, fields){
+                                if(error){
+                                        res.send(JSON.stringify({ "status": 500, "message": "Erro ao salvar a foto na pasta. Tente novamente", "response": null }));
+                                        console.log(error);
+                                }else
+                                        res.send(JSON.stringify({ "status": 200, "message": 'Upload concluido com sucesso!', "response": null }));
+                        });
+
+
+                }
+        });
+});
+
+//GENEROS
 
 router.post('/', mydebug, verificarToken,function(req, res, next) {
 	console.log("cheguei aqui");
@@ -144,7 +224,7 @@ router.post('/', mydebug, verificarToken,function(req, res, next) {
 					jsondata.paisOrigemTitulo,jsondata.generoTitulo,jsondata.tipoTitulo,
 					jsondata.estreiaMundialTitulo,jsondata.estreiaBrasilTitulo];
 
-				connection.query('INSERT INTO Titulo (nomePortuguesTitulo,nomeOriginalTitulo,sinopseTitulo,diretorTitulo,anoProducaoTitulo,duracaoMinutosTitulo,classificacaoTitulo,paisOrigemTitulo,generoTitulo,tipoTitulo,estreiaMundialTitulo,estreiaBrasilTitulo) VALUES (?);' , [values], 
+				connection.query('INSERT INTO Titulo (nomePortuguesTitulo,nomeOriginalTitulo,sinopseTitulo,diretorTitulo,anoProducaoTitulo,duracaoMinutosTitulo,classificacaoTitulo,paisOrigemTitulo,generoTitulo,tipoTitulo,estreiaMundialTitulo,estreiaBrasilTitulo) VALUES (?) ON DUPLICATE KEY UPDATE duracaoMinutosTitulo='+jsondata.duracaoMinutosTitulo+';' , [values], 
 					function (error, results, fields) {
 						if(error){
 							res.send(JSON.stringify({"status": 500, "error": error, "response": null}));
@@ -242,7 +322,7 @@ router.delete('/:id', mydebug,function(req, res, next){
 
 
 router.get('/generos/todos', function(req, res, next) {
-        connection.query('SELECT genero from generosTitulo;', function (error, results, fields) {
+        connection.query('SELECT * from generosTitulo;', function (error, results, fields) {
                 if(error){
                         res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
                         //If there is error, we send the error in the error section with 500 status
