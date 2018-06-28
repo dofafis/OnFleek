@@ -11,7 +11,7 @@ function verificarToken(req, res, next){
 		jwt.verify(token, config.secret, function(err, decoded){
 			if(err){
 				
-				res.send(JSON({ "status": 500,"auth": false, 
+				res.send(JSON.stringify({ "status": 500,"auth": false, 
 				"message": 'Não foi possível autenticar o token, tente novamente.' }));
 			}else{
 				req.idUsuario = decoded.id;

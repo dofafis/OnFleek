@@ -47,29 +47,48 @@ router.get('/avaliacoes/:estrelas', function(req, res, next){
 */
 /* POST listas Recebe um token do usuario que está criando a lista, também recebe o nome da lista e se quiser criar uma lista vazia, envia um idTitulo igual a zero*/
 router.post('/', verificarToken, function(req, res, next){
-	connection.query('SELECT distinct * FROM Usuario_Lista_Titulo WHERE Usuario_idUsuario=?;',[req.idUsuario],
-		function(error, results, fields){
+	var values = [req.idUsuario,req.body.nomeLista];
+	connection.query('INSERT INTO Lista (Usuario_idUsuario,nomeLista) VALUES (?) ON DUPLICATE KEY UPDATE Usuario_idUsuario='+req.idUsuario+',nomeLista='+JSON.stringify(req.body.nomeLista),[values],
+		function(error,results,fields){
 			if(error){
-				res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
-			}else{
-				var values = [req.idUsuario,req.body.idTitulo,req.body.nomeLista];
-				connection.query('INSERT INTO Usuario_Lista_Titulo (Usuario_idUsuario,Titulo_idTitulo,nomeLista) VALUES (?) ON DUPLICATE KEY UPDATE Usuario_idUsuario='+req.idUsuario+',Titulo_idTitulo='+req.body.idTitulo+',nomeLista='+JSON.stringify(req.body.nomeLista),[values],
-					function(error,results,fields){
-						if(error){
-        			                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
-       	                			}else{
-							res.send(JSON.stringify({ "status": 200, "error": null, "response": "Consulta bem sucedida!" }));
-						}
-					}
-				);
+	                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+       			}else{
+				res.send(JSON.stringify({ "status": 200, "error": null, "response": "Consulta bem sucedida!" }));
 			}
 		}
 	);
 });
 
+router.post('/adicionar', verificarToken, function(req, res, next){
+	var consulta = "SELECT * FROM Lista WHERE Usuario_idUsuario="+req.idUsuario+" AND nomeLista='";
+	consulta+=req.body.nomeLista+"';";
+	connection.query(consulta, function(error, results, fields){
+		if(error){
+                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+                }else{
+                        if(results.length==0)res.send(JSON.stringify({ "status": 500, "error": "Lista não existe, impossível adiconar titulos", "response": null }));
+			else{
+				console.log('asdasdasdsa aqui wow');
+				consulta = "INSERT INTO Usuario_Lista_Titulo (Usuario_idUsuario,Titulo_idTitulo,nomeLista) VALUES ("+req.idUsuario+","+req.body.idTitulo+",'";
+				consulta+=req.body.nomeLista+"') ON DUPLICATE KEY  UPDATE Usuario_idUsuario="+req.idUsuario+",Titulo_idTitulo="+req.body.idTitulo+",nomeLista='";
+				consulta+=req.body.nomeLista+"';"
+				connection.query(consulta,
+			                function(error,results,fields){
+	                        		if(error){
+	                        		        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+	                        		}else{
+	                        		        res.send(JSON.stringify({ "status": 200, "error": null, "response": "Consulta bem sucedida!" }));
+	                        		}
+					}
+				);
+	                }
+		}
+        });
+});
+
 router.patch('/', verificarToken, function(req, res, next){
 	var values = [req.body.nomeLista, req.body.novoNome];
-	var consulta = "update Usuario_Lista_Titulo set nomeLista= CASE WHEN nomeLista='"+[values[0]];
+	var consulta = "update Lista set nomeLista= CASE WHEN nomeLista='"+[values[0]];
 	consulta +="' AND Usuario_idUsuario="+req.body.idUsuario;
 	consulta +=" then '";
 	consulta +=[values[1]]+"' END;";
@@ -83,5 +102,21 @@ router.patch('/', verificarToken, function(req, res, next){
 	});
 });
 
+router.delete('/', verificarToken, function(req, res, next){
+	req.body.nomeLista += "'";
+	connection.query("DELETE FROM Lista WHERE Usuario_idUsuario="+req.idUsuario+" AND nomeLista='"+req.body.nomeLista+";",function(error, results, fields){
+		if(error)res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+		else{
+			res.send(JSON.stringify({ "status": 200, "error": null, "response": "Consulta bem sucedida!" }));
+		}
+	});
+});
+router.delete('/remover', verificarToken, function(req, res, next){
+	req.body.nomeLista += "'";
+	connection.query("DELETE FROM Usuario_Lista_Titulo WHERE Usuario_idUsuario="+req.idUsuario+" AND Titulo_idTitulo="+req.body.idTitulo+" AND nomeLista='"+req.body.nomeLista+";", function(error, results, fields){
+		if(error)res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+		else res.send(JSON.stringify({ "status": 200, "error": null, "response": "Consulta bem sucedida!" }));
+	});
+});
 module.exports = router;
 

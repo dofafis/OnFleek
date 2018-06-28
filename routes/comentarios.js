@@ -6,10 +6,10 @@ var connection = require('../db');
 router.get('/', function(req, res, next) {
         connection.query('SELECT idComentario,Usuario_idUsuario AS idUsuario,Titulo_idTitulo AS idTitulo,descricaoComentario AS comentario from Usuario_Comenta_Titulo;', function (error, results, fields) {
                 if(error){
-                        res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
+                        res.status(500).send(JSON.stringify({"status": 500, "error": error, "response": null})); 
                         //If there is error, we send the error in the error section with 500 status
                 } else {
-                        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+                        res.status(200).send(JSON.stringify({"status": 200, "error": null, "response": results}));
                         //If there is no error, all is good and response is 200OK.
                 }
         });
@@ -18,10 +18,10 @@ router.get('/', function(req, res, next) {
 router.get('/:id', function(req, res, next) {
         connection.query('SELECT idComentario,Usuario_idUsuario AS idUsuario,Titulo_idTitulo AS idTitulo,descricaoComentario AS comentario from Usuario_Comenta_Titulo where idComentario=?;', req.params.id, function (error, results, fields) {
                 if(error){
-                        res.send(JSON.stringify({"status": 500, "error": error, "response": null})); 
+                        res.status(500).send(JSON.stringify({"status": 500, "error": error, "response": null})); 
                         //If there is error, we send the error in the error section with 500 status
                 } else {
-                        res.send(JSON.stringify({"status": 200, "error": null, "response": results}));
+                        res.status(200).send(JSON.stringify({"status": 200, "error": null, "response": results}));
                         //If there is no error, all is good and response is 200OK.
                 }
         });
@@ -32,16 +32,16 @@ router.post('/', verificarToken, function(req, res, next){
 	connection.query('SELECT * FROM Usuario WHERE idUsuario=?;',[req.idUsuario],
 		function(error, results, fields){
 			if(error){
-				res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+				res.status(500).send(JSON.stringify({ "status": 500, "error": error, "response": null }));
 			}else{
 				if(results[0].idUsuario===req.body.idUsuario){
 					var values = [req.body.idUsuario,req.body.idTitulo,req.body.comentario];
 					connection.query('INSERT INTO Usuario_Comenta_Titulo (Usuario_idUsuario,Titulo_idTitulo,descricaoComentario) VALUES (?)',[values],
 						function(error,results,fields){
 							if(error){
-	        			                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+	        			                        res.status(500).send(JSON.stringify({ "status": 500, "error": error, "response": null }));
         	                			}else{
-								res.send(JSON.stringify({ "status": 200, "error": null, "response": "Consulta bem sucedida!" }));
+								res.status(200).send(JSON.stringify({ "status": 200, "error": null, "response": "Consulta bem sucedida!" }));
 							}
 						}
 					);
@@ -60,13 +60,13 @@ router.patch('/', verificarToken, function(req, res, next){
 
         connection.query(consultar, function(error, results, fields){
                 if(error){
-                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+                        res.status(500).send(JSON.stringify({ "status": 500, "error": error, "response": null }));
                 }else{
 			consulta = "SELECT * FROM Usuario_Comenta_Titulo WHERE idComentario="+req.body.idComentario;
 			consulta += ";";
 			connection.query(consulta, function(error, results, fields){
 				if(error){
-		                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+		                        res.status(500).send(JSON.stringify({ "status": 500, "error": error, "response": null }));
 				}else if(results[0].Usuario_idUsuario===req.idUsuario){
 		                	if(!(typeof req.body.comentario === 'undefined')){
 	                        		var valor = req.body.comentario+"'";
@@ -74,17 +74,17 @@ router.patch('/', verificarToken, function(req, res, next){
 						var consulta = "UPDATE Usuario_Comenta_Titulo SET "+values.toString()+" WHERE idComentario="+req.body.idComentario+";";
                                         	connection.query(consulta, function(err, results, fields){
                                                 	if(err){
-                                                	        res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
+                                                	        res.status(500).send(JSON.stringify({"status": 500, "error": err, "response": null}));
                                                 	} else {
-                                                	        res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
+                                                	        res.status(200).send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
                                                 	}
                                         	});
 	                		}else{
-						res.send(JSON.stringify({ "status": 204 , "message": "Comentário editado não foi enviado no corpo da requisição" }));
+						res.status(204).send(JSON.stringify({ "status": 204 , "message": "Comentário editado não foi enviado no corpo da requisição" }));
 					}
 
 				}else{
-					res.send(JSON.stringify({ "status": 401, "auth": false, "message": "Usuario não autorizado a executar esta ação" }));
+					res.status(401).send(JSON.stringify({ "status": 401, "auth": false, "message": "Usuario não autorizado a executar esta ação" }));
 				}
 			});
 		}
@@ -99,25 +99,25 @@ router.delete('/', verificarToken, function(req, res, next){
 
         connection.query(consultar, function(error, results, fields){
                 if(error){
-                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+                        res.status(500).send(JSON.stringify({ "status": 500, "error": error, "response": null }));
                 }else{
 			var usuarioToken = results[0];
                         consulta = "SELECT * FROM Usuario_Comenta_Titulo WHERE idComentario="+req.body.idComentario;
                         consulta += ";";
                         connection.query(consulta, function(error, results, fields){
                                 if(error){
-                                        res.send(JSON.stringify({ "status": 500, "error": error, "response": null }));
+                                        res.status(500).send(JSON.stringify({ "status": 500, "error": error, "response": null }));
                                 }else if(results[0].Usuario_idUsuario===req.idUsuario || usuarioToken.admUsuario===1){
                                         var consulta = "DELETE FROM Usuario_Comenta_Titulo WHERE idComentario="+req.body.idComentario+";";
                                         connection.query(consulta, function(err, results, fields){
                                                 if(err){
-                                                        res.send(JSON.stringify({"status": 500, "error": err, "response": null}));
+                                                        res.status(500).send(JSON.stringify({"status": 500, "error": err, "response": null}));
                                                 } else {
-                                                        res.send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
+                                                        res.status(200).send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
                                                 }
                                         });
                                 }else if(usuarioToken.admUsuario===0){
-					res.send(JSON.stringify({ "status": 401, "auth": false, "message": "Usuario não autorizado a executar esta ação" }));
+					res.status(401).send(JSON.stringify({ "status": 401, "auth": false, "message": "Usuario não autorizado a executar esta ação" }));
 				}
                         });
                 }
