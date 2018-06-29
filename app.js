@@ -21,6 +21,8 @@ var listasRouter = require('./routes/listas');
 var indexRouter = require('./routes/index');
 var mydebug = require('./mydebug');
 var filesRouter = require('./routes/files');
+var avaliacoesRouter = require('./routes/avaliacoes');
+var chatRouter = require('./routes/chat');
 var connection = require('./db');
 
 var app = express();
@@ -55,8 +57,10 @@ app.use('/', indexRouter);
 app.use('/titulos', mydebug, titulosRouter);
 app.use('/usuarios', usuariosRouter);
 app.use('/comentarios', comentariosRouter);
+app.use('/avaliacoes', avaliacoesRouter);
 app.use('/listas', listasRouter);
 app.use('/files', filesRouter);
+app.use('/chat', chatRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

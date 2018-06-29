@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var verificarToken = require('./verificarToken');
 var connection = require('../db');
-/* GET comentarios listing. */
+/* GET /comentarios  retorna todos os comentários. */
 router.get('/', function(req, res, next) {
         connection.query('SELECT idComentario,Usuario_idUsuario AS idUsuario,Titulo_idTitulo AS idTitulo,descricaoComentario AS comentario from Usuario_Comenta_Titulo;', function (error, results, fields) {
                 if(error){
@@ -15,6 +15,7 @@ router.get('/', function(req, res, next) {
         });
 });
 
+/* GET /comentarios/:id recebe o id do comentário no parametro e retorna as informações do comentário em questão */
 router.get('/:id', function(req, res, next) {
         connection.query('SELECT idComentario,Usuario_idUsuario AS idUsuario,Titulo_idTitulo AS idTitulo,descricaoComentario AS comentario from Usuario_Comenta_Titulo where idComentario=?;', req.params.id, function (error, results, fields) {
                 if(error){
@@ -27,7 +28,7 @@ router.get('/:id', function(req, res, next) {
         });
 });
 
-// POST comentarios
+/* POST /comentarios recebe um token, 'idUsuario','idTitulo','comentario' */
 router.post('/', verificarToken, function(req, res, next){
 	connection.query('SELECT * FROM Usuario WHERE idUsuario=?;',[req.idUsuario],
 		function(error, results, fields){
@@ -52,7 +53,7 @@ router.post('/', verificarToken, function(req, res, next){
 });
 
 
-/* PATCH Comentarios */
+/* PATCH /comentarios recebe um token e o novo comentário editado no atributo 'comentario' */
 router.patch('/', verificarToken, function(req, res, next){
         var values = [];
         var consultar = 'SELECT * FROM Usuario WHERE idUsuario='+[req.idUsuario];
@@ -91,7 +92,7 @@ router.patch('/', verificarToken, function(req, res, next){
         });
 });
 
-//ALTERANDO PARA COMENTARIO
+/* DELETE /comentarios recebe um token e o idComentario que deseja deletar */
 router.delete('/', verificarToken, function(req, res, next){
         var values = [];
         var consultar = 'SELECT * FROM Usuario WHERE idUsuario='+[req.idUsuario];
@@ -107,7 +108,7 @@ router.delete('/', verificarToken, function(req, res, next){
                         connection.query(consulta, function(error, results, fields){
                                 if(error){
                                         res.status(500).send(JSON.stringify({ "status": 500, "error": error, "response": null }));
-                                }else if(results[0].Usuario_idUsuario===req.idUsuario || usuarioToken.admUsuario===1){
+                                }else if(results.length!=0 && (results[0].Usuario_idUsuario===req.idUsuario || usuarioToken.admUsuario===1)){
                                         var consulta = "DELETE FROM Usuario_Comenta_Titulo WHERE idComentario="+req.body.idComentario+";";
                                         connection.query(consulta, function(err, results, fields){
                                                 if(err){
@@ -116,9 +117,9 @@ router.delete('/', verificarToken, function(req, res, next){
                                                         res.status(200).send(JSON.stringify({"status": 200, "error": null, "response": "Consulta bem sucedida!"}));
                                                 }
                                         });
-                                }else if(usuarioToken.admUsuario===0){
+                                }else if(results.length!=0 && usuarioToken.admUsuario===0){
 					res.status(401).send(JSON.stringify({ "status": 401, "auth": false, "message": "Usuario não autorizado a executar esta ação" }));
-				}
+				}else res.status(500).send(JSON.stringify({ "status": 500, "error": "Comentário inexistente, talvez você tenha tentado deletá-lo duas vezes", "response": null }));
                         });
                 }
         });

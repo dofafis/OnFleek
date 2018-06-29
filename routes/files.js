@@ -1,3 +1,4 @@
+//só um padrão d upload e download de arquivos que deixei aqui, se não fizer sentido é porque deu medo de apagar
 var express = require('express');
 var router = express.Router();
 var connection = require('../db');

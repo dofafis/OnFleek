@@ -25,6 +25,28 @@ router.get('/', function(req, res, next) {
         });
 });
 
+router.get('/:id/avaliacoes', function(req, res, next){
+        connection.query("SELECT * FROM Usuario_Avalia_Titulo WHERE Titulo_idTitulo="+req.params.id, function(error, results, fields){
+                if(error)res.status(500).send(JSON.stringify({"status": 500, "error": error, "response": null})); 
+                else {
+			var estrelas = [0, 0, 0, 0, 0, 0];
+			for(var i=0;i<results.length;i++){
+				estrelas[results[i].estrelas]++;
+			}
+			var resultado = {"0estrelas": estrelas[0],"1estrelas": estrelas[1],"2estrelas": estrelas[2],"3estrelas": estrelas[3],"4estrelas": estrelas[4],"5estrelas": estrelas[5]};
+			res.status(200).send(JSON.stringify({"status": 200, "error": null, "response": resultado}));
+		}
+        });
+});
+
+
+router.get('/:id/favoritado', function(req, res, next){
+	connection.query("SELECT Usuario_idUsuario FROM Usuario_Lista_Titulo WHERE Titulo_idTitulo="+req.params.id, function(error, results, fields){
+		if(error)res.status(500).send(JSON.stringify({"status": 500, "error": error, "response": null})); 
+		else res.status(200).send(JSON.stringify({"status": 200, "error": null, "response": results.length}));
+	});
+});
+
 router.get('/:idgenero/porgenero', function(req, res, next) {
         connection.query('SELECT * from generosTitulo where idGenero='+req.params.idgenero+';', function (error, results, fields) {
                 if(error){
@@ -63,9 +85,11 @@ router.get('/:id', mydebug, function(req, res, next) {
 					if(error){
 						res.status(500).send(JSON.stringify({"status": 500, "error": error, "response": null})); 
 					}else{
-						results[0].caminhoFoto = null;
-			                      	res.status(200).send(JSON.stringify({"status": 200, "error": null, "response": results}));
-        		               	 	//If there is no error, all is good and response is 200OK.
+						if(results.length!=0){
+							results[0].caminhoFoto = null;
+			                      		res.status(200).send(JSON.stringify({"status": 200, "error": null, "response": results}));
+        		               	 		//If there is no error, all is good and response is 200OK.
+						}else res.status(500).send(JSON.stringify({"status": 500, "error": "não há titulo com o id em questão", "response": null}));
 					}
 				});
 			}

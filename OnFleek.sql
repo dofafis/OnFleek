@@ -73,6 +73,28 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Comenta_Titulo` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+-- -----------------------------------------------------
+-- Table `OnFleek`.`Usuario_Conversa_Usuario`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Conversa_Usuario` (
+  `idMensagem` INT NOT NULL AUTO_INCREMENT,
+  `Usuario_idUsuario1` INT NOT NULL,
+  `Usuario_idUsuario2` INT NOT NULL,
+  `mensagem` VARCHAR(5000) NULL,
+  PRIMARY KEY (`idMensagem`),
+  CONSTRAINT `fk_Usuario_has_Usuario_Usuario200`
+    FOREIGN KEY (`Usuario_idUsuario1`)
+    REFERENCES `OnFleek`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Usuario_has_Usuario_Usuario100`
+    FOREIGN KEY (`Usuario_idUsuario2`)
+    REFERENCES `OnFleek`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
 
 -- -----------------------------------------------------
 -- Table `OnFleek`.`Usuario_Lista_Titulo`
@@ -95,6 +117,23 @@ CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Lista_Titulo` (
   CONSTRAINT `fk_Usuario_has_Titulo_Lista3`
     FOREIGN KEY (`nomeLista`)
     REFERENCES `OnFleek`.`Lista` (`nomeLista`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `OnFleek`.`Usuario_Avalia_Titulo` (
+  `Usuario_idUsuario` INT NOT NULL,
+  `Titulo_idTitulo` INT NOT NULL,
+  `estrelas` INT NOT NULL,
+  PRIMARY KEY (`Usuario_idUsuario`,`Titulo_idTitulo`),
+  CONSTRAINT `fk_Usuario_has_Titulo_Usuario10`
+    FOREIGN KEY (`Usuario_idUsuario`)
+    REFERENCES `OnFleek`.`Usuario` (`idUsuario`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_Usuario_has_Titulo_Titulo20`
+    FOREIGN KEY (`Titulo_idTitulo`)
+    REFERENCES `OnFleek`.`Titulo` (`idTitulo`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB;
@@ -131,7 +170,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `OnFleek`.`foto_Titulo` (
   `Titulo_idTitulo` INT NOT NULL,
   `caminhoFoto` VARCHAR(700) NOT NULL,
-  PRIMARY KEY (`Titulo_idTitulo`,`caminhoFoto`),
+  PRIMARY KEY (`Titulo_idTitulo`),
   CONSTRAINT `fk_Titulo_caminho_Foto`
     FOREIGN KEY (`Titulo_idTitulo`)
     REFERENCES `OnFleek`.`Titulo` (`idTitulo`)
